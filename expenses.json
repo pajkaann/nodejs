@@ -3,15 +3,5 @@
     "id": 1,
     "description": "Mlijeko",
     "amount": 2
-  },
-  {
-    "id": 2,
-    "description": "Tuna",
-    "amount": 2.5
-  },
-  {
-    "id": 3,
-    "description": "Kruh",
-    "amount": 1.5
   }
 ]

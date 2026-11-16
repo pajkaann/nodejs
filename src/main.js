@@ -1,5 +1,5 @@
 import formatExpense, { currency } from "./format.js";
-import{ loadExpenses, saveExpenses } from "./storage.js";
+import { loadExpenses, saveExpenses } from "./storage.js";
 
 const APP_NAME = "Troškovnik";
 console.log(`== ${APP_NAME} ==`);
@@ -16,7 +16,7 @@ const [command, arg1, arg2] = process.argv.slice(2); // npr. ["add", "Kruh", "3.
 
 let expenses;
 try {
-    expenses = loadExpenses();
+    expenses = await loadExpenses();
 } catch (error) {
     console.error(`Datoteka expenses.json nije ispravna: ${error.message}`);
     process.exit(1);
@@ -25,8 +25,8 @@ try {
 
 switch (command) {
     case "add":
-        const amount = Number(arg2);
-        if (arg1 === undefined || Number.isNaN(amount)) {
+        const amounts = Number(arg2);
+        if (arg1 === undefined || Number.isNaN(amounts)) {
             console.error('Korištenje: add "opis" iznos');
             process.exit(1);
         }
@@ -34,8 +34,8 @@ switch (command) {
         if (expenses.length > 0) {
             newId = expenses[expenses.length - 1].id + 1;
         }
-        expenses.push({ id: newId, description: arg1, amount: amount });
-        saveExpenses(expenses); // spremamo troškove 
+        expenses.push({ id: newId, description: arg1, amount: amounts });
+        await saveExpenses(expenses); // spremamo troškove
         console.log(`Dodano: ${arg1} (broj ${newId})`);
         break;
 
@@ -44,23 +44,50 @@ switch (command) {
             console.log("Nema troškova.");
         } else {
             /*
-            for (let i = 0; i < expenses.length; i++) {
-                const expense = expenses[i];
-                console.log(`${expense.id}. ${expense.description}: ${expense.amount}`);
-            }
-            */
+                  for (let i = 0; i < expenses.length; i++) {
+                      const expense = expenses[i];
+                      console.log(`${expense.id}. ${expense.description}: ${expense.amount}`);
+                  }
+                  */
             expenses.forEach((expense) => console.log(formatExpense(expense)));
         }
         break;
-    
+
     case "total":
+        const amount = expenses.map((expense) => expense.amount);
+
         let total = 0;
-        for (const expense of expenses) {
-            total = total + expense.amount;
+        for (const expense of amount) {
+            total = total + value;
         }
         console.log(`Ukupno: ${total} ${currency}`);
         break;
-        
+
+    case "remove":
+        const id = Number(arg1);
+        if (Number.isNaN(id)) {
+            console.error("Korištenje: remove broj");
+            process.exit(1);
+        }
+
+        let deleted = false;
+        const kept = expenses.filter((expense) => {
+            if (expense.id !== id) {
+                return true;
+            } else {
+                deleted = true;
+                return false;
+            }
+        });
+
+        if (deleted) {
+            await saveExpenses(kept);
+            console.log(`Obrisan je trošak broj ${id}.`);
+        } else {
+            console.log(`Trošak broj ${id} nije obrisan jer ne postoji.`);
+        }
+        break;
+
     default:
         console.error("Nepoznata naredba. Koristi: add, list ili total.");
         process.exit(1);
